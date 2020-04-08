@@ -1,0 +1,65 @@
+# This YAML file describes your package. Stack will automatically generate a
+# Cabal file when you run `stack build`. See the hpack website for help with
+# this file: <https://github.com/sol/hpack>.
+name: HaskellPlex
+version: '0.0.0'
+github: "githubuser/HaskellPlex"
+license: MIT
+author: "Connor Ford and Jake Hauser"
+maintainer: "Connor Ford and Jake Hauser"
+synopsis: Evaluate your data in Haskell with persistent homology.
+# description: HaskellPlex is a new Haskeleton package.
+# category: Other
+
+extra-source-files:
+- CHANGELOG.md
+- LICENSE.md
+- package.yaml
+- README.md
+- stack.yaml
+
+ghc-options: -Wall
+
+library:
+  dependencies:
+  - base
+  source-dirs: library
+
+executables:
+  HaskellPlex:
+    source-dirs: executable
+    main: Main.hs
+    dependencies:
+    - base
+    - HaskellPlex
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+
+benchmarks:
+  HaskellPlex-benchmarks:
+    source-dirs: benchmark
+    main: Main.hs
+    dependencies:
+    - base
+    - HaskellPlex
+    - criterion
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+
+tests:
+  HaskellPlex-test-suite:
+    source-dirs: test-suite
+    main: Main.hs
+    dependencies:
+    - base
+    - HaskellPlex
+    - tasty
+    - tasty-hspec
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
