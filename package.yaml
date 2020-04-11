@@ -59,6 +59,7 @@ tests:
     - HaskellPlex
     - tasty
     - tasty-hspec
+    - tasty-hunit
     ghc-options:
     - -rtsopts
     - -threaded
