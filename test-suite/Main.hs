@@ -1,17 +1,18 @@
 -- Tasty makes it easy to test your code. It is a test framework that can
 -- combine many different types of tests into one suite. See its website for
 -- help: <http://documentup.com/feuerbach/tasty>.
-import qualified Test.Tasty
+import Test.Tasty
 -- Hspec is one of the providers for Tasty. It provides a nice syntax for
 -- writing tests. Its website has more info: <https://hspec.github.io>.
 import Test.Tasty.Hspec
+import Test.Tasty.HUnit
+
+import SimplexStream
 
 main :: IO ()
 main = do
-    test <- testSpec "HaskellPlex" spec
-    Test.Tasty.defaultMain test
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest])
 
-spec :: Spec
-spec = parallel $ do
-    it "is trivially true" $ do
-        True `shouldBe` True
+addSingleVertexTest :: TestTree
+addSingleVertexTest = testCase "Testing addition of single vertex"
+  (assertEqual "Should return true for search of vertex 5" True (isVertexInStream (addVertex initializeStream 5) 5))
