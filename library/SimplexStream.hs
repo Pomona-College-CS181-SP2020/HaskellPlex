@@ -13,11 +13,20 @@ instance Show Simplex where
     show (Vertex a) = show a
     show (Edge a b) = "(" ++ show a ++ "," ++ show b ++ ")"
 
+instance Eq Simplex where
+    (Vertex v) == (Vertex x) = v == x 
+    (Edge a b) == (Edge c d) = (a == c && b == d) || (a == d && b == c)
+    _          == _          = False
+
+
 data Stream = Simplicies [Simplex]
 
 instance Show Stream where
     show (Simplicies []) = ""
     show (Simplicies (x:xs)) = show x ++ ", " ++ show (Simplicies xs)
+
+instance Eq Stream where 
+    (Simplicies ls) == (Simplicies ts) = ls == ts
 
 initializeStream :: Stream 
 initializeStream = Simplicies []
@@ -31,7 +40,7 @@ isVertexInStream (Simplicies [])   _ = False
 isVertexInStream (Simplicies (x:xs)) v = 
     case x of
         Vertex z -> if z == v then True else isVertexInStream (Simplicies xs) v
-        Edge a b -> isVertexInStream (Simplicies xs) v
+        Edge _ _ -> isVertexInStream (Simplicies xs) v
 
 
 -- if a vertex on the edge is not in the stream, you get the original stream returned.
