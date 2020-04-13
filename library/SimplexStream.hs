@@ -54,3 +54,22 @@ addEdge stream@(Simplicies xs) a b =
             Simplicies $ (Edge a b):xs
         else 
             stream
+
+
+-- get number of simplicies in stream
+getSize :: Stream -> Int 
+getSize (Simplicies l) = length l
+
+-- given a simplex, determine if it is a vertex
+isVertex :: Simplex -> Bool
+isVertex (Vertex _) = True 
+isVertex _          = False
+
+-- get value from vertex
+vertexLift :: Simplex -> Int
+vertexLift (Vertex x) = x 
+vertexLift _          = error "the vertexLift method only takes vertices as input."
+
+-- get verticies 
+getVertices :: Stream -> [Int]
+getVertices (Simplicies l) = foldl (\acc simplex -> if isVertex simplex then (vertexLift simplex):acc else acc) [] l
