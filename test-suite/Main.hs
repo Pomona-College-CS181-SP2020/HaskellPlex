@@ -11,7 +11,7 @@ import SimplexStream
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest])
 
 addSingleVertexTest :: TestTree
 addSingleVertexTest = testCase "Testing addition of single vertex"
@@ -19,4 +19,15 @@ addSingleVertexTest = testCase "Testing addition of single vertex"
 
 initializeStreamTest :: TestTree
 initializeStreamTest = testCase "Testing initialization of stream"
-  (assertEqual "Should return Simplicies []" (Simplicies []) (initializeStream))
+  (assertEqual "Should return Simplicies []" (Simplicies [Simplex []]) (initializeStream))
+
+-- FAILING TEST
+stream1 :: Stream 
+stream1 = addEdge (addVertex (addVertex (addVertex initializeStream 1) 2) 3) 1 2
+
+stream2 :: Stream 
+stream2 = addVertex (addEdge (addVertex (addVertex initializeStream 1) 2) 2 1) 3
+
+streamEqualityTest :: TestTree 
+streamEqualityTest = testCase "Testing quality of streams"
+  (assertEqual "Should return Simplicies []" (True) (stream1 == stream2))
