@@ -19,15 +19,15 @@ addSingleVertexTest = testCase "Testing addition of single vertex"
 
 initializeStreamTest :: TestTree
 initializeStreamTest = testCase "Testing initialization of stream"
-  (assertEqual "Should return Simplicies []" (Simplicies [Simplex []]) (initializeStream))
+  (assertEqual "Should return Simplices []" (Simplices [Simplex []]) (initializeStream))
 
--- FAILING TEST
 stream1 :: Stream 
 stream1 = addEdge (addVertex (addVertex (addVertex initializeStream 1) 2) 3) 1 2
 
 stream2 :: Stream 
 stream2 = addVertex (addEdge (addVertex (addVertex initializeStream 1) 2) 2 1) 3
 
+-- Testing stream equality. Order of Simplex in Stream data type _should not matter_
 streamEqualityTest :: TestTree 
 streamEqualityTest = testCase "Testing quality of streams"
-  (assertEqual "Should return Simplicies []" (True) (stream1 == stream2))
+  (assertEqual "Should return Simplices []" (True) (stream1 == stream2))

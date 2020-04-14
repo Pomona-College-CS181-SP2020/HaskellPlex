@@ -4,70 +4,105 @@ module SimplexStream where
 
 import Data.List (sort)
 
-
+-- Alternative approach:
+--      data Simplex = Simplex Int [Int]
+-- where the first term is the length(order) of the simplex.
+-- advantages: this allows for much faster lookup. i.e. when iterating over a list of simplex we would not have to compute lengths.
+-- disadvantages: more complexity for storage.
+--
+-- Another note: We should be able to implement with for a generic type a, as long as we can define equality on a. We may not require ordering (Ord) although Ord could make implementations quicker.
+--
 data Simplex = Simplex [Int]
 
 instance Show Simplex where 
     show (Simplex xs) = show xs
 
+-- Sort simplex lists, then iterate over both simultaneously comparing elements.
+-- O(n log(n) + m log (m) + n + m)
 instance Eq Simplex where
     (Simplex []) == (Simplex []) = True
+    (Simplex []) == (Simplex _ys) = False 
+    (Simplex _xs) == (Simplex []) = False
     (Simplex xs) == (Simplex ys)
-            | xs_sorted == [] && ys_sorted /= []   = False
-            | xs_sorted /= []  && ys_sorted == []  = False
             | x /= y = False 
             | x == y = (Simplex rest_x) == (Simplex rest_y)
         where 
-            xs_sorted@(x:rest_x) = sort xs
-            ys_sorted@(y:rest_y) = sort ys
+            (x:rest_x) = sort xs
+            (y:rest_y) = sort ys
 
 
-
-data Stream = Simplicies [Simplex]
+-- A stream is a list of simplices
+--
+-- A simplicial complex is a non-empty set of finite sets closed under subsets.
+data Stream = Simplices [Simplex]
 
 instance Show Stream where
-    show (Simplicies []) = ""
-    show (Simplicies (x:xs)) = show x ++ ", " ++ show (Simplicies xs)
+    show (Simplices []) = ""
+    show (Simplices (x:xs)) = show x ++ ", " ++ show (Simplices xs)
+
+
+simplexInStream :: Simplex -> Stream -> Bool 
+simplexInStream simplex stream = 
+    case stream of
+        Simplices [] -> False
+        Simplices (x:xs) -> 
+            if simplex == x then 
+                True 
+            else 
+                simplexInStream simplex (Simplices xs)
+
+-- True if first stream is a subcomplex of the second stream
+isSubcomplex :: Stream -> Stream -> Bool
+-- Simplices [] is an uninitialized/invalid stream so cannot use as 'True' base case
+isSubcomplex (Simplices []) _stream2 = False
+isSubcomplex (Simplices [x]) stream2 = simplexInStream x stream2
+isSubcomplex (Simplices (x:xs)) stream2 = 
+    if not (simplexInStream x stream2) then 
+        False 
+    else 
+        isSubcomplex (Simplices xs) stream2
 
 -- TODO: implement more efficiently by looking at higher-order simplices
+-- Two streams are equivalent if they contain identical simplices.
 instance Eq Stream where 
-    (Simplicies ls) == (Simplicies ts) = ls == ts -- WRONG!!
+    stream1 == stream2 = 
+        isSubcomplex stream1 stream2 && isSubcomplex stream2 stream1
 
 initializeStream :: Stream 
-initializeStream = Simplicies [(Simplex [])] -- initialize with null cell
+initializeStream = Simplices [(Simplex [])] -- initialize with null cell
 
 addVertex :: Stream -> Int -> Stream 
-addVertex (Simplicies xs) x = Simplicies $ (Simplex [x]):xs
+addVertex (Simplices xs) x = Simplices $ (Simplex [x]):xs
 
 -- Returns True if the vertex is in the stream. Otherwise, False.
 isVertexInStream :: Stream -> Int -> Bool
-isVertexInStream (Simplicies [])     _ = False
-isVertexInStream (Simplicies (x:xs)) v = 
+isVertexInStream (Simplices [])     _ = False
+isVertexInStream (Simplices (x:xs)) v = 
     case x of
-        Simplex [z] -> if z == v then True else isVertexInStream (Simplicies xs) v
-        Simplex _   -> isVertexInStream (Simplicies xs) v
+        Simplex [z] -> if z == v then True else isVertexInStream (Simplices xs) v
+        Simplex _   -> isVertexInStream (Simplices xs) v
 
 
 -- if a vertex on the edge is not in the stream, you get the original stream returned.
 addEdge :: Stream -> Int -> Int -> Stream 
-addEdge stream@(Simplicies xs) a b = 
+addEdge stream@(Simplices xs) a b = 
     let
         aInStream = isVertexInStream stream a
         bInStream = isVertexInStream stream b
     in
         if aInStream && bInStream then
-            Simplicies $ (Simplex [a,b]):xs
+            Simplices $ (Simplex [a,b]):xs
         else 
             stream
 
 
--- get number of simplicies in stream
+-- get number of simplices in stream
 getSize :: Stream -> Int 
-getSize (Simplicies l) = length l
+getSize (Simplices l) = length l
 
 -- given a simplex, determine if it is a vertex
 isVertex :: Simplex -> Bool
-isVertex (Simplex [x]) = True 
+isVertex (Simplex [_x]) = True 
 isVertex _          = False
 
 -- get value from vertex
@@ -77,4 +112,4 @@ vertexLift _             = error "the vertexLift method only takes vertices as i
 
 -- get verticies 
 getVertices :: Stream -> [Int]
-getVertices (Simplicies l) = foldl (\acc simplex -> if isVertex simplex then (vertexLift simplex):acc else acc) [] l
+getVertices (Simplices l) = foldl (\acc simplex -> if isVertex simplex then (vertexLift simplex):acc else acc) [] l
