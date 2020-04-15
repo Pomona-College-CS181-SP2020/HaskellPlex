@@ -22,10 +22,10 @@ initializeStreamTest = testCase "Testing initialization of stream"
   (assertEqual "Should return Simplices []" (Simplices [Simplex []]) (initializeStream))
 
 stream1 :: Stream 
-stream1 = addEdge (addVertex (addVertex (addVertex initializeStream 1) 2) 3) 1 2
+stream1 = addSimplex (addVertex (addVertex (addVertex initializeStream 1) 2) 3) [1,2]
 
 stream2 :: Stream 
-stream2 = addVertex (addEdge (addVertex (addVertex initializeStream 1) 2) 2 1) 3
+stream2 = addVertex (addSimplex (addVertex (addVertex initializeStream 1) 2) [2,1]) 3
 
 -- Testing stream equality. Order of Simplex in Stream data type _should not matter_
 streamEqualityTest :: TestTree 

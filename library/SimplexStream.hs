@@ -2,7 +2,7 @@
 
 module SimplexStream where
 
-import Data.List (sort)
+import Data.List (sort, subsequences)
 
 -- Alternative approach:
 --      data Simplex = Simplex Int [Int]
@@ -83,17 +83,17 @@ isVertexInStream (Simplices (x:xs)) v =
         Simplex _   -> isVertexInStream (Simplices xs) v
 
 
--- if a vertex on the edge is not in the stream, you get the original stream returned.
-addEdge :: Stream -> Int -> Int -> Stream 
-addEdge stream@(Simplices xs) a b = 
-    let
-        aInStream = isVertexInStream stream a
-        bInStream = isVertexInStream stream b
-    in
-        if aInStream && bInStream then
-            Simplices $ (Simplex [a,b]):xs
-        else 
-            stream
+-- Given a simplex return a list of all subcomplexes.
+-- note: this includes the trivial subcomplexes [] and the inputted simplex
+getSubcomplexes :: Simplex -> [Simplex]
+getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
+
+
+
+-- addSimplex adds a simplex and all sub-complexes to the stream if not already present.
+-- requirement: all names in simplex must be unique
+addSimplex :: Stream -> Simplex -> Stream
+addSimplex (Simplices simps) simplex = Simplices (foldl (\simps spx -> if simplexInStream spx (Simplices simps) then simps else spx:simps) simps (getSubcomplexes simplex))
 
 
 -- get number of simplices in stream
