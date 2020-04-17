@@ -18,6 +18,7 @@ instance Show Simplex where
     show (Simplex xs) = show xs
 
 -- Sort simplex lists, then iterate over both simultaneously comparing elements.
+-- note: requires that elements have an ordering.
 -- O(n log(n) + m log (m) + n + m)
 instance Eq Simplex where
     (Simplex []) == (Simplex []) = True
@@ -31,7 +32,9 @@ instance Eq Simplex where
             (y:rest_y) = sort ys
 
 
--- A stream is a list of simplices
+-- A stream is a list of simplices.
+-- If the list is empty then the stream is non-initialized. If this is the case
+-- then any operations on the stream will throw an error.
 --
 -- A simplicial complex is a non-empty set of finite sets closed under subsets.
 data Stream = Simplices [Simplex]
@@ -41,10 +44,14 @@ instance Show Stream where
     show (Simplices (x:xs)) = show x ++ ", " ++ show (Simplices xs)
 
 
+-- simplexInStream
+-- Iterates over the stream and checks for equality with the given simplex.
+-- efficiency: O(n)
 simplexInStream :: Simplex -> Stream -> Bool 
 simplexInStream simplex stream = 
     case stream of
-        Simplices [] -> False
+        Simplices [] -> error "Cannot find simplex in a non-initialized stream."
+        Simplices [x] -> simplex == x -- base case
         Simplices (x:xs) -> 
             if simplex == x then 
                 True 
@@ -53,9 +60,8 @@ simplexInStream simplex stream =
 
 -- True if first stream is a subcomplex of the second stream
 isSubcomplex :: Stream -> Stream -> Bool
--- Simplices [] is an uninitialized/invalid stream so cannot use as 'True' base case
-isSubcomplex (Simplices []) _stream2 = False
-isSubcomplex (Simplices [x]) stream2 = simplexInStream x stream2
+isSubcomplex (Simplices []) _stream2 = error "Cannot find subcomplex of uninitialized stream."
+isSubcomplex (Simplices [x]) stream2 = simplexInStream x stream2 -- base case
 isSubcomplex (Simplices (x:xs)) stream2 = 
     if not (simplexInStream x stream2) then 
         False 
@@ -76,7 +82,8 @@ addVertex (Simplices xs) x = Simplices $ (Simplex [x]):xs
 
 -- Returns True if the vertex is in the stream. Otherwise, False.
 isVertexInStream :: Stream -> Int -> Bool
-isVertexInStream (Simplices [])     _ = False
+isVertexInStream (Simplices [])     _ = error "Cannot find vertex in a non-initialized stream."
+isVertexInStream (Simplices [x])   v = (vertexLift x) == v
 isVertexInStream (Simplices (x:xs)) v = 
     case x of
         Simplex [z] -> if z == v then True else isVertexInStream (Simplices xs) v
