@@ -10,17 +10,17 @@ import Data.List (sort, subsequences)
 -- advantages: this allows for much faster lookup. i.e. when iterating over a list of simplex we would not have to compute lengths.
 -- disadvantages: more complexity for storage.
 --
--- Another note: We should be able to implement with for a generic type a, as long as we can define equality on a. We may not require ordering (Ord) although Ord could make implementations quicker.
+-- Another note: We should be able to implement with for a generic type a, as long as we can define equality and ordering on a.
 --
-data Simplex = Simplex [Int]
+data Simplex a = Simplex [a]
 
-instance Show Simplex where 
+instance (Show a) => Show (Simplex a) where 
     show (Simplex xs) = show xs
 
 -- Sort simplex lists, then iterate over both simultaneously comparing elements.
 -- note: requires that elements have an ordering.
 -- O(n log(n) + m log (m) + n + m)
-instance Eq Simplex where
+instance (Ord a) => Eq (Simplex a) where
     (Simplex []) == (Simplex []) = True
     (Simplex []) == (Simplex _ys) = False 
     (Simplex _xs) == (Simplex []) = False
@@ -37,9 +37,9 @@ instance Eq Simplex where
 -- then any operations on the stream will throw an error.
 --
 -- A simplicial complex is a non-empty set of finite sets closed under subsets.
-data Stream = Simplices [Simplex]
+data Stream a = Simplices [Simplex a]
 
-instance Show Stream where
+instance (Show a) => Show (Stream a) where
     show (Simplices []) = ""
     show (Simplices (x:xs)) = show x ++ ", " ++ show (Simplices xs)
 
@@ -47,7 +47,7 @@ instance Show Stream where
 -- simplexInStream
 -- Iterates over the stream and checks for equality with the given simplex.
 -- efficiency: O(n)
-simplexInStream :: Simplex -> Stream -> Bool 
+simplexInStream :: (Ord a) => Simplex a -> Stream a -> Bool 
 simplexInStream simplex stream = 
     case stream of
         Simplices [] -> error "Cannot find simplex in a non-initialized stream."
@@ -59,7 +59,7 @@ simplexInStream simplex stream =
                 simplexInStream simplex (Simplices xs)
 
 -- True if first stream is a subcomplex of the second stream
-isSubcomplex :: Stream -> Stream -> Bool
+isSubcomplex :: (Ord a) => Stream a -> Stream a -> Bool
 isSubcomplex (Simplices []) _stream2 = error "Cannot find subcomplex of uninitialized stream."
 isSubcomplex (Simplices [x]) stream2 = simplexInStream x stream2 -- base case
 isSubcomplex (Simplices (x:xs)) stream2 = 
@@ -70,18 +70,18 @@ isSubcomplex (Simplices (x:xs)) stream2 =
 
 -- TODO: implement more efficiently by looking at higher-order simplices
 -- Two streams are equivalent if they contain identical simplices.
-instance Eq Stream where 
+instance (Ord a) => Eq (Stream a) where 
     stream1 == stream2 = 
         isSubcomplex stream1 stream2 && isSubcomplex stream2 stream1
 
-initializeStream :: Stream 
+initializeStream :: Stream a 
 initializeStream = Simplices [(Simplex [])] -- initialize with null cell
 
-addVertex :: Stream -> Int -> Stream 
+addVertex :: Stream a -> a -> Stream a
 addVertex (Simplices xs) x = Simplices $ (Simplex [x]):xs
 
 -- Returns True if the vertex is in the stream. Otherwise, False.
-isVertexInStream :: Stream -> Int -> Bool
+isVertexInStream :: (Ord a) => Stream a -> a -> Bool
 isVertexInStream (Simplices [])     _ = error "Cannot find vertex in a non-initialized stream."
 isVertexInStream (Simplices [x])   v = (vertexLift x) == v
 isVertexInStream (Simplices (x:xs)) v = 
@@ -92,41 +92,41 @@ isVertexInStream (Simplices (x:xs)) v =
 
 -- Given a simplex return a list of all subcomplexes.
 -- note: this includes the trivial subcomplexes [] and the inputted simplex
-getSubcomplexes :: Simplex -> [Simplex]
+getSubcomplexes :: Simplex a -> [Simplex a]
 getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
 
 
 
 -- addSimplex adds a simplex and all sub-complexes to the stream if not already present.
 -- requirement: all names in simplex must be unique
-addSimplex :: Stream -> Simplex -> Stream
+addSimplex :: (Ord a) => Stream a -> Simplex a -> Stream a
 addSimplex (Simplices []) _ = error "Cannot add a simplex to a non-initialized stream."
 addSimplex (Simplices simps) simplex = 
     Simplices (foldl (\simplicesAccumulator spx -> if simplexInStream spx (Simplices simplicesAccumulator) then simplicesAccumulator else spx:simplicesAccumulator) simps (getSubcomplexes simplex))
 
 
 -- get number of simplices in stream
-getSize :: Stream -> Int 
+getSize :: Stream a -> Int
 getSize (Simplices []) = error "Cannot get size of a non-initialized stream."
 getSize (Simplices l) = length l
 
 -- given a simplex, determine if it is a vertex
-isVertex :: Simplex -> Bool
+isVertex :: Simplex a  -> Bool
 isVertex (Simplex [_x]) = True 
 isVertex _          = False
 
 -- get the number of vertices
-numVertices :: Stream -> Int 
+numVertices :: Stream a -> Int 
 numVertices (Simplices [])    = error "Cannot get the number of vertices for a non-initialized stream."
 numVertices (Simplices simps) = foldl (\acc x -> if (isVertex x) then acc + 1 else acc) 0 simps
 
 -- get value from vertex
-vertexLift :: Simplex -> Int
+vertexLift :: Simplex a -> a
 vertexLift (Simplex [x]) = x 
 vertexLift _             = error "the vertexLift method only takes vertices as input."
 
 -- get verticies 
-getVertices :: Stream -> [Int]
+getVertices :: Stream a -> [a]
 getVertices (Simplices l) = 
     foldl(\acc simplex -> 
         if isVertex simplex then 

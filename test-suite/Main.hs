@@ -11,19 +11,19 @@ import ExplicitSimplexStream
 
 -- EXAMPLE STREAMS --
 
-stream1 :: Stream 
+stream1 :: Stream Int
 stream1 = addSimplex (addVertex (addVertex (addVertex initializeStream 1) 2) 3) (Simplex [1,2])
 
-stream2 :: Stream 
+stream2 :: Stream Int
 stream2 = addVertex (addSimplex (addVertex (addVertex initializeStream 1) 2) (Simplex [2,1])) 3
 
-stream3 :: Stream 
+stream3 :: Stream Int
 stream3 = addVertex (addVertex (addVertex (addVertex initializeStream 1) 2) 3) 4
 
-stream4 :: Stream 
+stream4 :: Stream Int
 stream4 = initializeStream 
 
-stream5 :: Stream 
+stream5 :: Stream Int
 stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 ----
@@ -35,11 +35,11 @@ main = do
 
 addSingleVertexTest :: TestTree
 addSingleVertexTest = testCase "Testing addition of single vertex"
-  (assertEqual "Should return true for search of vertex 5" True (isVertexInStream (addVertex initializeStream 5) 5))
+  (assertEqual "Should return true for search of vertex 5" (True) (isVertexInStream (addVertex (initializeStream :: Stream Int) 5) 5))
 
 initializeStreamTest :: TestTree
 initializeStreamTest = testCase "Testing initialization of stream"
-  (assertEqual "Should return Simplices []" (Simplices [Simplex []]) (initializeStream))
+  (assertEqual "Should return Simplices []" (Simplices [Simplex []] :: Stream Int) (initializeStream :: Stream Int))
 
 -- Testing stream equality. 
 -- Order of Simplex in Stream data type _should not matter_
