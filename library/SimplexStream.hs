@@ -93,17 +93,25 @@ getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
 -- addSimplex adds a simplex and all sub-complexes to the stream if not already present.
 -- requirement: all names in simplex must be unique
 addSimplex :: Stream -> Simplex -> Stream
-addSimplex (Simplices simps) simplex = Simplices (foldl (\simps spx -> if simplexInStream spx (Simplices simps) then simps else spx:simps) simps (getSubcomplexes simplex))
+addSimplex (Simplices []) _ = error "Cannot add a simplex to a non-initialized stream."
+addSimplex (Simplices simps) simplex = 
+    Simplices (foldl (\simplicesAccumulator spx -> if simplexInStream spx (Simplices simplicesAccumulator) then simplicesAccumulator else spx:simplicesAccumulator) simps (getSubcomplexes simplex))
 
 
 -- get number of simplices in stream
 getSize :: Stream -> Int 
+getSize (Simplices []) = error "Cannot get size of a non-initialized stream."
 getSize (Simplices l) = length l
 
 -- given a simplex, determine if it is a vertex
 isVertex :: Simplex -> Bool
 isVertex (Simplex [_x]) = True 
 isVertex _          = False
+
+-- get the number of vertices
+numVertices :: Stream -> Int 
+numVertices (Simplices [])    = error "Cannot get the number of vertices for a non-initialized stream."
+numVertices (Simplices simps) = foldl (\acc x -> if (isVertex x) then acc + 1 else acc) 0 simps
 
 -- get value from vertex
 vertexLift :: Simplex -> Int
@@ -112,4 +120,10 @@ vertexLift _             = error "the vertexLift method only takes vertices as i
 
 -- get verticies 
 getVertices :: Stream -> [Int]
-getVertices (Simplices l) = foldl (\acc simplex -> if isVertex simplex then (vertexLift simplex):acc else acc) [] l
+getVertices (Simplices l) = 
+    foldl(\acc simplex -> 
+        if isVertex simplex then 
+            (vertexLift simplex):acc 
+        else 
+            acc
+    ) [] l
