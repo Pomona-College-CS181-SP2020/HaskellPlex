@@ -30,7 +30,7 @@ stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest])
 
 
 addSingleVertexTest :: TestTree
@@ -54,3 +54,18 @@ streamNumVerticesEmptyTest = testCase "Testing number of vertices in empty strea
 streamNumVertices4CellTest :: TestTree 
 streamNumVertices4CellTest = testCase "Testing number of vertices in a 4-cell"
   (assertEqual "Should return 4" (4) (numVertices stream5))
+
+-- Test getSize 
+streamGetSizeEmptyTest :: TestTree
+streamGetSizeEmptyTest = testCase "Testing get size on empty stream."
+  (assertEqual "Should return 1 (the null-cell)" (1) (getSize stream4))
+
+streamGetSize4CellTest :: TestTree
+streamGetSize4CellTest = testCase "Testing get size on 4-cell stream."
+  (assertEqual "Should return 16" (16) (getSize stream5))
+
+streamGetSize4VertexTest :: TestTree
+streamGetSize4VertexTest = testCase "Testing get size on stream with 4 vertices."
+  (assertEqual "Should return 5 (four vertices + 1 null cell)." (5) (getSize stream3))
+
+
