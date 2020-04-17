@@ -1,6 +1,6 @@
 -- | authors: Connor Ford, Jake Hauser
 
-module SimplexStream where
+module ExplicitSimplexStream where
 
 import Data.List (sort, subsequences)
 

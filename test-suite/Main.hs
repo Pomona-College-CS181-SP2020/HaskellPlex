@@ -7,7 +7,7 @@ import Test.Tasty
 -- import Test.Tasty.Hspec
 import Test.Tasty.HUnit
 
-import SimplexStream
+import ExplicitSimplexStream
 
 -- EXAMPLE STREAMS --
 
@@ -41,7 +41,8 @@ initializeStreamTest :: TestTree
 initializeStreamTest = testCase "Testing initialization of stream"
   (assertEqual "Should return Simplices []" (Simplices [Simplex []]) (initializeStream))
 
--- Testing stream equality. Order of Simplex in Stream data type _should not matter_
+-- Testing stream equality. 
+-- Order of Simplex in Stream data type _should not matter_
 streamEqualityTest :: TestTree 
 streamEqualityTest = testCase "Testing quality of streams"
   (assertEqual "Should return Simplices []" (True) (stream1 == stream2))
@@ -67,5 +68,4 @@ streamGetSize4CellTest = testCase "Testing get size on 4-cell stream."
 streamGetSize4VertexTest :: TestTree
 streamGetSize4VertexTest = testCase "Testing get size on stream with 4 vertices."
   (assertEqual "Should return 5 (four vertices + 1 null cell)." (5) (getSize stream3))
-
 
