@@ -77,6 +77,7 @@ instance (Ord a) => Eq (Stream a) where
 initializeStream :: Stream a 
 initializeStream = Simplices [(Simplex [])] -- initialize with null cell
 
+-- Default filtration value 0.
 addVertex :: Stream a -> a -> Stream a
 addVertex (Simplices xs) x = Simplices $ (Simplex [x]):xs
 
@@ -99,6 +100,7 @@ getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
 
 -- addSimplex adds a simplex and all sub-complexes to the stream if not already present.
 -- requirement: all names in simplex must be unique
+-- default filtration value 0.
 addSimplex :: (Ord a) => Stream a -> Simplex a -> Stream a
 addSimplex (Simplices []) _ = error "Cannot add a simplex to a non-initialized stream."
 addSimplex (Simplices simps) simplex = 
@@ -134,3 +136,26 @@ getVertices (Simplices l) =
         else 
             acc
     ) [] l
+
+
+data BettiVector = BettiVector [Int]
+
+instance Show BettiVector where
+    show (BettiVector []) = "()"
+    show (BettiVector vs) = "(" ++ (foldl (\acc x -> acc ++ (show x)) "" vs) ++ ")"
+
+-- persistence
+-- Algorithm: 
+-- Given a simplex stream, and a field coefficient p corresponding to Z/pZ we will return betti numbers (b_0, b_1, ..., b_n) where n+1 equals the degree of the highest order simplex in the stream. 
+-- (1) Get simplex lists ordered by the degree of simplices
+-- (2) Get boundary maps D_0, ..., D_{n-1} such that:
+-- 0 <-- C_0 <-- C_1 <-- ... <-- C_{n-1} <-- C_n <-- 0
+--  D_{-1}   D_0     D_1                D_{n-1}
+-- (3) Compute dimensions of the Homologies:
+-- dim H_0 = dim Ker 0 - dim Im D_0
+-- dim H_1 = dim Ker D_0 - dim Im D_1 
+-- ...
+-- dim H_n = dim Ker D_{n-1} - dim Im 0
+-- (4) return betti profile (dim H_0, dim H_1, ..., dim H_n)
+persistence :: Stream a -> Int -> BettiVector
+persistence stream field = undefined
