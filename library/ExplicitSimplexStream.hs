@@ -157,5 +157,31 @@ instance Show BettiVector where
 -- ...
 -- dim H_n = dim Ker D_{n-1} - dim Im 0
 -- (4) return betti profile (dim H_0, dim H_1, ..., dim H_n)
+
+-- TODO: define show, equality, and ordering.
+data SimplexListByDegree a = SimplexListByDegree Int [Simplex a] deriving (Show)
+
+degreeOfSimplexListByDegree :: SimplexListByDegree a -> Int 
+degreeOfSimplexListByDegree (SimplexListByDegree x _) = x
+
+-- does not check length
+addSimplexToSimplexListByDegree :: Simplex a -> SimplexListByDegree a -> SimplexListByDegree a
+addSimplexToSimplexListByDegree simp (SimplexListByDegree len xs) = SimplexListByDegree len (simp:xs)
+
+data OrderedSimplexList a = OrderedSimplexList [SimplexListByDegree a] deriving (Show)
+
+addSimplexToOrderedSimplexList :: Simplex a -> [SimplexListByDegree a] -> [SimplexListByDegree a]
+addSimplexToOrderedSimplexList (Simplex simp) [] = [(SimplexListByDegree (length simp) [(Simplex simp)])]
+addSimplexToOrderedSimplexList (Simplex simp) (x:xs)
+    | (length simp) /= (degreeOfSimplexListByDegree x) = x:(addSimplexToOrderedSimplexList (Simplex simp) xs)
+    | (length simp) == (degreeOfSimplexListByDegree x) = (addSimplexToSimplexListByDegree (Simplex simp) x):xs
+    
+-- streamToOrderedSimplex
+-- transforms a stream (e.g. [1,2,3,(1,2),(1,3)]) 
+-- into an ordered simplex list (e.g. [1: [1,2,3], 2: [(1,2), (1,3)]]).
+streamToOrderedSimplexList :: Stream a -> OrderedSimplexList a
+streamToOrderedSimplexList (Simplices []) = error "Cannot convert non-initialized stream to ordered simplex list."
+streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (foldr (addSimplexToOrderedSimplexList) [] xs)
+
 persistence :: Stream a -> Int -> BettiVector
 persistence stream field = undefined
