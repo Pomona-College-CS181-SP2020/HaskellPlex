@@ -161,6 +161,9 @@ instance Show BettiVector where
 -- TODO: define show, equality, and ordering.
 data SimplexListByDegree a = SimplexListByDegree Int [Simplex a] deriving (Show)
 
+instance (Ord a) => Eq (SimplexListByDegree a) where 
+    (SimplexListByDegree a xs) == (SimplexListByDegree b ys) = (a == b) && (Simplices xs == Simplices ys)
+
 degreeOfSimplexListByDegree :: SimplexListByDegree a -> Int 
 degreeOfSimplexListByDegree (SimplexListByDegree x _) = x
 
@@ -168,7 +171,10 @@ degreeOfSimplexListByDegree (SimplexListByDegree x _) = x
 addSimplexToSimplexListByDegree :: Simplex a -> SimplexListByDegree a -> SimplexListByDegree a
 addSimplexToSimplexListByDegree simp (SimplexListByDegree len xs) = SimplexListByDegree len (simp:xs)
 
-data OrderedSimplexList a = OrderedSimplexList [SimplexListByDegree a] deriving (Show)
+data OrderedSimplexList a = OrderedSimplexList [SimplexListByDegree a] deriving (Show, Eq)
+
+instance (Ord a) => Ord (SimplexListByDegree a) where 
+    compare (SimplexListByDegree m _) (SimplexListByDegree n _) = compare m n
 
 addSimplexToOrderedSimplexList :: Simplex a -> [SimplexListByDegree a] -> [SimplexListByDegree a]
 addSimplexToOrderedSimplexList (Simplex simp) [] = [(SimplexListByDegree (length simp) [(Simplex simp)])]
@@ -179,9 +185,9 @@ addSimplexToOrderedSimplexList (Simplex simp) (x:xs)
 -- streamToOrderedSimplex
 -- transforms a stream (e.g. [1,2,3,(1,2),(1,3)]) 
 -- into an ordered simplex list (e.g. [1: [1,2,3], 2: [(1,2), (1,3)]]).
-streamToOrderedSimplexList :: Stream a -> OrderedSimplexList a
+streamToOrderedSimplexList :: (Ord a) => Stream a -> OrderedSimplexList a
 streamToOrderedSimplexList (Simplices []) = error "Cannot convert non-initialized stream to ordered simplex list."
-streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (foldr (addSimplexToOrderedSimplexList) [] xs)
+streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (addSimplexToOrderedSimplexList) [] xs))
 
 persistence :: Stream a -> Int -> BettiVector
 persistence stream field = undefined

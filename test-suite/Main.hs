@@ -30,7 +30,7 @@ stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest])
 
 
 addSingleVertexTest :: TestTree
@@ -69,3 +69,7 @@ streamGetSize4VertexTest :: TestTree
 streamGetSize4VertexTest = testCase "Testing get size on stream with 4 vertices."
   (assertEqual "Should return 5 (four vertices + 1 null cell)." (5) (getSize stream3))
 
+-- Test streamToOrderedSimplexList 
+streamToOrderedSimplexListFourVerticesTest :: TestTree
+streamToOrderedSimplexListFourVerticesTest = testCase "Testing streamToOrderedSimplexList on stream with 4 vertices."
+  (assertEqual "Should return object with lengths 0 and 1 with four vertices inside the 1 key." (OrderedSimplexList [SimplexListByDegree 0 [(Simplex [])], SimplexListByDegree 1 [(Simplex [1]), (Simplex [2]), (Simplex [3]), (Simplex [4])]]) (streamToOrderedSimplexList stream3))
