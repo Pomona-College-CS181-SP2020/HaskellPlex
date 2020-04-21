@@ -4,6 +4,8 @@ module ExplicitSimplexStream where
 
 import Data.List (sort, subsequences)
 
+import Data.Matrix
+
 -- Alternative approach:
 --      data Simplex = Simplex Int [Int]
 -- where the first term is the length(order) of the simplex.
@@ -188,6 +190,10 @@ addSimplexToOrderedSimplexList (Simplex simp) (x:xs)
 streamToOrderedSimplexList :: (Ord a) => Stream a -> OrderedSimplexList a
 streamToOrderedSimplexList (Simplices []) = error "Cannot convert non-initialized stream to ordered simplex list."
 streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (addSimplexToOrderedSimplexList) [] xs))
+
+
+getBoundaryMap :: OrderedSimplexList a -> OrderedSimplexList a -> Matrix Int
+getBoundaryMap list1 list2 = undefined
 
 persistence :: Stream a -> Int -> BettiVector
 persistence stream field = undefined
