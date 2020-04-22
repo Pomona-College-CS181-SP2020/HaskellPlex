@@ -191,8 +191,13 @@ streamToOrderedSimplexList :: (Ord a) => Stream a -> OrderedSimplexList a
 streamToOrderedSimplexList (Simplices []) = error "Cannot convert non-initialized stream to ordered simplex list."
 streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (addSimplexToOrderedSimplexList) [] xs))
 
-
-getBoundaryMap :: OrderedSimplexList a -> OrderedSimplexList a -> Matrix Int
+-- First argument C_k+1
+-- Second argument C_k
+-- matrix dimensions: len(C_k) = num rows, len(C_k+1) = num cols
+-- algorithm: 
+-- Given element of C_k+1, y, remove i'th element from y (starting with index zero) to get element in C_k called x. 
+-- Then the value in the matrix at row idxOf(x) and column idxOf(y) is (-1)^i.
+getBoundaryMap :: SimplexListByDegree a -> SimplexListByDegree a -> Matrix Int
 getBoundaryMap list1 list2 = undefined
 
 persistence :: Stream a -> Int -> BettiVector
