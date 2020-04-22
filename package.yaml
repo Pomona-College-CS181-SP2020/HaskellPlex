@@ -23,6 +23,7 @@ ghc-options: -Wall
 library:
   dependencies:
   - base
+  - matrix
   source-dirs: library
 
 executables:
