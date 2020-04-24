@@ -197,6 +197,10 @@ removeListElement :: [a] -> Int -> [a]
 removeListElement [] _ = []
 removeListElement (x:xs) n = if n == 0 then xs else x:(removeListElement xs (n-1))
 
+-- second argument should be zero.
+indexOfSimplex :: (Ord a) => Simplex a -> Int -> SimplexListByDegree a -> Int 
+indexOfSimplex simp k (SimplexListByDegree n []) = error "Improper SimplexListByDegree in indexOfSimplex"
+indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = if x == simp then k else indexOfSimplex simp (k+1) (SimplexListByDegree n xs)
 
 -- First argument C_k+1
 -- Second argument C_k
