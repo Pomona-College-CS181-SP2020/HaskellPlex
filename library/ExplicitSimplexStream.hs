@@ -193,14 +193,27 @@ streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (add
 
 
 
-removeListElement :: [a] -> Int -> [a]
-removeListElement [] _ = []
-removeListElement (x:xs) n = if n == 0 then xs else x:(removeListElement xs (n-1))
+removeSimplexElement :: Simplex a -> Int -> [a]
+removeSimplexElement (Simplex []) _ = []
+removeSimplexElement (Simplex (x:xs)) n = if n == 0 then xs else x:(removeListElement xs (n-1))
 
 -- second argument should be zero.
+-- necessitates that simplex is in simplexlist
 indexOfSimplex :: (Ord a) => Simplex a -> Int -> SimplexListByDegree a -> Int 
 indexOfSimplex simp k (SimplexListByDegree n []) = error "Improper SimplexListByDegree in indexOfSimplex"
 indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = if x == simp then k else indexOfSimplex simp (k+1) (SimplexListByDegree n xs)
+
+-- both ints should be zero
+-- matrix should be zero matrix
+getBoundaryMapHelper :: SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Int -> Matrix Int
+getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat = 
+    let 
+        x = indexOfSimplex (Simplex (removeListElement x m)) 0 list1
+        y = k
+        val = (-1)^m
+        updatedMatrix = setElem val (x,y) mat
+    in 
+        getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) (m+1) k updatedMatrix
 
 -- First argument C_k+1
 -- Second argument C_k
@@ -209,7 +222,7 @@ indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = if x == simp then k else 
 -- Given element of C_k+1, y, remove i'th element from y (starting with index zero) to get element in C_k called x. 
 -- Then the value in the matrix at row idxOf(x) and column idxOf(y) is (-1)^i.
 getBoundaryMap :: SimplexListByDegree a -> SimplexListByDegree a -> Matrix Int
-getBoundaryMap list1 (SimplexListByDegree n (x:xs)) = undefined
+getBoundaryMap list1 (SimplexListByDegree n simps) = 
 
 persistence :: Stream a -> Int -> BettiVector
 persistence stream field = undefined
