@@ -61,6 +61,7 @@ tests:
     - tasty
     - tasty-hspec
     - tasty-hunit
+    - matrix
     ghc-options:
     - -rtsopts
     - -threaded

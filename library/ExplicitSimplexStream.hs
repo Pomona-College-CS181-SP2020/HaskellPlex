@@ -195,7 +195,7 @@ streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (add
 
 removeSimplexElement :: Simplex a -> Int -> [a]
 removeSimplexElement (Simplex []) _ = []
-removeSimplexElement (Simplex (x:xs)) n = if n == 0 then xs else x:(removeListElement xs (n-1))
+removeSimplexElement (Simplex (x:xs)) n = if n == 0 then xs else x:(removeSimplexElement (Simplex xs) (n-1))
 
 -- second argument should be zero.
 -- necessitates that simplex is in simplexlist
@@ -203,26 +203,29 @@ indexOfSimplex :: (Ord a) => Simplex a -> Int -> SimplexListByDegree a -> Int
 indexOfSimplex simp k (SimplexListByDegree n []) = error "Improper SimplexListByDegree in indexOfSimplex"
 indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = if x == simp then k else indexOfSimplex simp (k+1) (SimplexListByDegree n xs)
 
--- both ints should be zero
+-- first int should be the lnegth of the x in (x:xs)
+-- second int should be zero
 -- matrix should be zero matrix
-getBoundaryMapHelper :: SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Int -> Matrix Int
+getBoundaryMapHelper :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Int -> Matrix Int
+getBoundaryMapHelper list1 (SimplexListByDegree n []) _ _ mat = mat
+getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat = 
     let 
-        x = indexOfSimplex (Simplex (removeListElement x m)) 0 list1
-        y = k
-        val = (-1)^m
-        updatedMatrix = setElem val (x,y) mat
+        x_dim = indexOfSimplex (Simplex (removeSimplexElement x (m-1))) 0 list1
+        y_dim = k
+        val = (-1)^(m-1)
+        updatedMatrix = setElem val (x_dim+1,y_dim+1) mat
     in 
-        getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) (m+1) k updatedMatrix
+        getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) (m-1) k updatedMatrix
 
--- First argument C_k+1
--- Second argument C_k
+-- First argument C_k
+-- Second argument C_k+1
 -- matrix dimensions: len(C_k) = num rows, len(C_k+1) = num cols
 -- algorithm: 
 -- Given element of C_k+1, y, remove i'th element from y (starting with index zero) to get element in C_k called x. 
 -- Then the value in the matrix at row idxOf(x) and column idxOf(y) is (-1)^i.
-getBoundaryMap :: SimplexListByDegree a -> SimplexListByDegree a -> Matrix Int
-getBoundaryMap list1 (SimplexListByDegree n simps) = 
+getBoundaryMap :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Matrix Int
+getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (zero (length simps1) (length simps2))
 
 persistence :: Stream a -> Int -> BettiVector
 persistence stream field = undefined

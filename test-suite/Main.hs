@@ -9,6 +9,9 @@ import Test.Tasty.HUnit
 
 import ExplicitSimplexStream
 
+import Data.Matrix
+
+
 -- EXAMPLE STREAMS --
 
 stream1 :: Stream Int
@@ -30,7 +33,7 @@ stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest])
 
 
 addSingleVertexTest :: TestTree
@@ -77,3 +80,12 @@ streamToOrderedSimplexListFourVerticesTest = testCase "Testing streamToOrderedSi
 streamToOrderedSimplexListThreeVerticesOneEdgeTest :: TestTree
 streamToOrderedSimplexListThreeVerticesOneEdgeTest = testCase "Testing streamToOrderedSimplexList on stream with 3 vertices and one edge."
   (assertEqual "Should return object with lengths 0, 1, and 2 with three vertices inside the 1 key and 1 edge inside the 2 key." (OrderedSimplexList [SimplexListByDegree 0 [(Simplex [])], SimplexListByDegree 1 [(Simplex [1]), (Simplex [2]), (Simplex [3])], SimplexListByDegree 2 [(Simplex [1,2])]]) (streamToOrderedSimplexList stream1))
+
+-- Test getBoundaryMap
+simplexList1 :: SimplexListByDegree Int 
+simplexList2 :: SimplexListByDegree Int 
+simplexList1 = SimplexListByDegree 3 [(Simplex [1,2,3]), (Simplex [2,3,4])]
+simplexList2 = SimplexListByDegree 2 [(Simplex [1,2]), (Simplex [2,3]), (Simplex [1,3]), (Simplex [2,4]), (Simplex [3,4])]
+getBoundaryMapTest :: TestTree
+getBoundaryMapTest = testCase "Testing getBoundaryMap."
+  (assertEqual "Should return ..." (fromLists [[1,0],[1,1],[-1,0],[0,-1],[0,1]]) (getBoundaryMap simplexList2 simplexList1))
