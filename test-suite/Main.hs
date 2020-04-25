@@ -33,7 +33,7 @@ stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest, getBoundaryMapTest2])
 
 
 addSingleVertexTest :: TestTree
@@ -89,3 +89,11 @@ simplexList2 = SimplexListByDegree 2 [(Simplex [1,2]), (Simplex [2,3]), (Simplex
 getBoundaryMapTest :: TestTree
 getBoundaryMapTest = testCase "Testing getBoundaryMap."
   (assertEqual "Should return ..." (fromLists [[1,0],[1,1],[-1,0],[0,-1],[0,1]]) (getBoundaryMap simplexList2 simplexList1))
+
+simplexList3 :: SimplexListByDegree Int 
+simplexList4 :: SimplexListByDegree Int 
+simplexList3 = SimplexListByDegree 1 [(Simplex [1]), (Simplex [2]), (Simplex [3]), (Simplex [4])]
+simplexList4 = SimplexListByDegree 2 [(Simplex [1,2]), (Simplex [1,3]), (Simplex [1,4]), (Simplex [2,3]), (Simplex [3,4])]
+getBoundaryMapTest2 :: TestTree
+getBoundaryMapTest2 = testCase "Testing getBoundaryMap."
+  (assertEqual "Should return ..." (fromLists [[-1,-1,-1,0,0],[1,0,0,-1,0],[0,1,0,1,-1],[0,0,1,0,1]]) (getBoundaryMap simplexList3 simplexList4))
