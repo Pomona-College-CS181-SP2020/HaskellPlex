@@ -227,5 +227,18 @@ getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat =
 getBoundaryMap :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Matrix Int
 getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (zero (length simps1) (length simps2))
 
+
+-- first arg is D_i+1
+-- second arg is D_i 
+-- want to find: dim ker D_i - dim im D_i+1
+-- algorithm to find ker and im:
+-- (i) rref matrix 
+-- (ii) # of non-zero rows correspond to rnk of original matrix.
+-- (iii) # of columns with leading 1’s correspond to the columns of original matrix that span image.
+-- (iv) dim ker = (ii) - (iii)
+getHomologyDimension :: Matrix Int -> Matrix Int -> Int 
+getHomologyDimension m1 m2 = undefined 
+
+
 persistence :: Stream a -> Int -> BettiVector
 persistence stream field = undefined
