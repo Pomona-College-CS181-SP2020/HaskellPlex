@@ -9,7 +9,8 @@ import Test.Tasty.HUnit
 
 import ExplicitSimplexStream
 
-import Data.Matrix
+-- import Data.Matrix
+import Numeric.LinearAlgebra
 
 
 -- EXAMPLE STREAMS --
@@ -33,7 +34,7 @@ stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest, getBoundaryMapTest2, getBoundaryMapTest3])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest, getBoundaryMapTest2, getBoundaryMapTest3, getHomologyDimensionTest])
 
 
 addSingleVertexTest :: TestTree
@@ -105,3 +106,18 @@ simplexList6 = SimplexListByDegree 1 [(Simplex [1]), (Simplex [2])]
 getBoundaryMapTest3 :: TestTree
 getBoundaryMapTest3 = testCase "Testing trivial case for getBoundaryMap."
   (assertEqual "Should return ..." (fromLists [[1, 1]]) (getBoundaryMap simplexList5 simplexList6))
+
+-- Test getHomologyDimension 
+simplexList7 :: SimplexListByDegree Int 
+simplexList8 :: SimplexListByDegree Int 
+simplexList9 :: SimplexListByDegree Int 
+simplexList7 = SimplexListByDegree 0 [(Simplex [])]
+simplexList8 = SimplexListByDegree 1 [(Simplex [1]), (Simplex [2]), (Simplex [3])]
+simplexList9 = SimplexListByDegree 2 [(Simplex [1,2]), (Simplex [2,3]), (Simplex [1,3])]
+map1 :: Matrix Double 
+map2 :: Matrix Double
+map1 = getBoundaryMap simplexList7 simplexList8
+map2 = getBoundaryMap simplexList8 simplexList9
+getHomologyDimensionTest :: TestTree
+getHomologyDimensionTest = testCase "Testing getHomologyDimension function."
+  (assertEqual "Should return ..." (1) (getHomologyDimension map2 map1))

@@ -24,6 +24,7 @@ library:
   dependencies:
   - base
   - matrix
+  - hmatrix
   source-dirs: library
 
 executables:
@@ -62,6 +63,7 @@ tests:
     - tasty-hspec
     - tasty-hunit
     - matrix
+    - hmatrix
     ghc-options:
     - -rtsopts
     - -threaded

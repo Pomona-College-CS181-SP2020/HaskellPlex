@@ -4,7 +4,9 @@ module ExplicitSimplexStream where
 
 import Data.List (sort, subsequences)
 
-import Data.Matrix
+-- import Data.Matrix
+
+import Numeric.LinearAlgebra
 
 -- Alternative approach:
 --      data Simplex = Simplex Int [Int]
@@ -206,7 +208,7 @@ indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = if x == simp then k else 
 -- first int should be the lnegth of the x in (x:xs)
 -- second int should be zero
 -- matrix should be zero matrix
-getBoundaryMapHelper :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Int -> Matrix Int
+getBoundaryMapHelper :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Double -> Matrix Double
 getBoundaryMapHelper list1 (SimplexListByDegree n []) _ _ mat = mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat = 
@@ -214,7 +216,7 @@ getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat =
         x_dim = indexOfSimplex (Simplex (removeSimplexElement x (m-1))) 0 list1
         y_dim = k
         val = (-1)^(m-1)
-        updatedMatrix = setElem val (x_dim+1,y_dim+1) mat
+        updatedMatrix = accum mat (\a b -> a) [((x_dim,y_dim), val)]
     in 
         getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) (m-1) k updatedMatrix
 
@@ -224,8 +226,8 @@ getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat =
 -- algorithm: 
 -- Given element of C_k+1, y, remove i'th element from y (starting with index zero) to get element in C_k called x. 
 -- Then the value in the matrix at row idxOf(x) and column idxOf(y) is (-1)^i.
-getBoundaryMap :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Matrix Int
-getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (zero (length simps1) (length simps2))
+getBoundaryMap :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Matrix Double
+getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (matrix (length simps2) (replicate ((length simps1)*(length simps2)) 0))
 
 
 -- first arg is D_i+1
@@ -236,8 +238,17 @@ getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps
 -- (ii) # of non-zero rows correspond to rnk of original matrix.
 -- (iii) # of columns with leading 1’s correspond to the columns of original matrix that span image.
 -- (iv) dim ker = (ii) - (iii)
-getHomologyDimension :: Matrix Int -> Matrix Int -> Int 
-getHomologyDimension m1 m2 = undefined 
+getHomologyDimension :: Matrix Double -> Matrix Double -> Int 
+getHomologyDimension m1 m2 = 
+    let 
+        m1_columns = cols m1 
+        m2_columns = cols m2 
+        m1_rank = rank m1 
+        m2_rank = rank m2 
+        m1_nullity = m1_columns - m1_rank 
+        m2_nullity = m2_columns - m2_rank
+    in 
+        m2_nullity - m1_rank 
 
 
 persistence :: Stream a -> Int -> BettiVector
