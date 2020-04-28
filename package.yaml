@@ -25,6 +25,7 @@ library:
   - base
   - matrix
   - hmatrix
+  - utility-ht
   source-dirs: library
 
 executables:

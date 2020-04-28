@@ -8,6 +8,8 @@ import Data.List (sort, subsequences)
 
 import Numeric.LinearAlgebra
 
+import Data.List.HT (mapAdjacent)
+
 -- Alternative approach:
 --      data Simplex = Simplex Int [Int]
 -- where the first term is the length(order) of the simplex.
@@ -251,5 +253,14 @@ getHomologyDimension m1 m2 =
         m2_nullity - m1_rank 
 
 
-persistence :: Stream a -> Int -> BettiVector
-persistence stream field = undefined
+persistenceHelper :: [Matrix Double] -> [Int]
+persistenceHelper [] = []
+persistenceHelper [x] = [getHomologyDimension ((ident 1) - (ident 1)) x]
+persistenceHelper (x:y:xs) = (getHomologyDimension y x):(persistenceHelper (y:xs))
+
+persistence :: (Ord a) => Stream a -> Int -> [Int]
+persistence stream field = 
+    let 
+        (OrderedSimplexList l) = streamToOrderedSimplexList stream 
+    in 
+        persistenceHelper (mapAdjacent getBoundaryMap l)
