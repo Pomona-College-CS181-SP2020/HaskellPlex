@@ -4,8 +4,6 @@ module ExplicitSimplexStream where
 
 import Data.List (sort, subsequences)
 
--- import Data.Matrix
-
 import Numeric.LinearAlgebra
 
 import Data.List.HT (mapAdjacent)

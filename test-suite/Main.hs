@@ -9,7 +9,6 @@ import Test.Tasty.HUnit
 
 import ExplicitSimplexStream
 
--- import Data.Matrix
 import Numeric.LinearAlgebra
 
 
