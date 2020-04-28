@@ -120,7 +120,7 @@ map1 = getBoundaryMap simplexList7 simplexList8
 map2 = getBoundaryMap simplexList8 simplexList9
 getHomologyDimensionTest :: TestTree
 getHomologyDimensionTest = testCase "Testing getHomologyDimension function."
-  (assertEqual "Should return ..." (1) (getHomologyDimension map2 map1))
+  (assertEqual "Should return ..." (1) (getHomologyDimension map2 map1 0))
 
 -- Test persistence
 stream6 :: Stream Int

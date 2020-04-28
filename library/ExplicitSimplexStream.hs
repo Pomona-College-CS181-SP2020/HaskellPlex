@@ -234,14 +234,15 @@ getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps
 
 -- first arg is D_i+1
 -- second arg is D_i 
+-- third argument k (or i in the below illustration)
 -- want to find: dim ker D_i - dim im D_i+1
 -- algorithm to find ker and im:
 -- (i) rref matrix 
 -- (ii) # of non-zero rows correspond to rnk of original matrix.
 -- (iii) # of columns with leading 1’s correspond to the columns of original matrix that span image.
 -- (iv) dim ker = (ii) - (iii)
-getHomologyDimension :: Matrix Double -> Matrix Double -> Int 
-getHomologyDimension m1 m2 = 
+getHomologyDimension :: Matrix Double -> Matrix Double -> Int -> Int 
+getHomologyDimension m1 m2 k = 
     let 
         m1_columns = cols m1 
         m2_columns = cols m2 
@@ -250,17 +251,20 @@ getHomologyDimension m1 m2 =
         m1_nullity = m1_columns - m1_rank 
         m2_nullity = m2_columns - m2_rank
     in 
-        m2_nullity - m1_rank 
+        if k > 0 then 
+            m2_nullity - m1_rank 
+        else 
+            m2_columns - m1_rank
 
-
-persistenceHelper :: [Matrix Double] -> [Int]
-persistenceHelper [] = []
-persistenceHelper [x] = [getHomologyDimension ((ident 1) - (ident 1)) x]
-persistenceHelper (x:y:xs) = (getHomologyDimension y x):(persistenceHelper (y:xs))
+-- second argument is k
+persistenceHelper :: [Matrix Double] -> Int -> [Int]
+persistenceHelper [] k  = []
+persistenceHelper [x] k  = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case last boundary map
+persistenceHelper (x:y:xs) k = (getHomologyDimension y x k):(persistenceHelper (y:xs) (k+1))
 
 persistence :: (Ord a) => Stream a -> Int -> [Int]
 persistence stream field = 
     let 
         (OrderedSimplexList l) = streamToOrderedSimplexList stream 
     in 
-        persistenceHelper (mapAdjacent getBoundaryMap l)
+        persistenceHelper (mapAdjacent getBoundaryMap l) 0
