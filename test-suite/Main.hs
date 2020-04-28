@@ -34,7 +34,7 @@ stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest, getBoundaryMapTest2, getBoundaryMapTest3, getHomologyDimensionTest])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest, getBoundaryMapTest2, getBoundaryMapTest3, getHomologyDimensionTest, persistenceTest])
 
 
 addSingleVertexTest :: TestTree
@@ -121,3 +121,10 @@ map2 = getBoundaryMap simplexList8 simplexList9
 getHomologyDimensionTest :: TestTree
 getHomologyDimensionTest = testCase "Testing getHomologyDimension function."
   (assertEqual "Should return ..." (1) (getHomologyDimension map2 map1))
+
+-- Test persistence
+stream6 :: Stream Int
+stream6 = addSimplex (addSimplex (addSimplex initializeStream (Simplex [1,2])) (Simplex [2,3])) (Simplex [1,3])
+persistenceTest :: TestTree
+persistenceTest = testCase "Testing persistence function."
+  (assertEqual "Should return ..." ([1,1]) (persistence stream6 1))
