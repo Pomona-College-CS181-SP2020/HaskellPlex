@@ -33,7 +33,7 @@ stream5 = addSimplex stream4 (Simplex [1,2,3,4])
 
 main :: IO ()
 main = do
-  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest, getBoundaryMapTest2, getBoundaryMapTest3, getHomologyDimensionTest, persistenceTest])
+  defaultMain (testGroup "SimplexStream tests" [addSingleVertexTest, initializeStreamTest, streamEqualityTest, streamNumVerticesEmptyTest, streamNumVertices4CellTest, streamGetSizeEmptyTest, streamGetSize4CellTest, streamGetSize4VertexTest, streamToOrderedSimplexListFourVerticesTest, streamToOrderedSimplexListThreeVerticesOneEdgeTest, getBoundaryMapTest, getBoundaryMapTest2, getBoundaryMapTest3, getHomologyDimensionTest, persistenceTest, persistenceTest2, persistenceTest3])
 
 
 addSingleVertexTest :: TestTree
@@ -127,3 +127,11 @@ stream6 = addSimplex (addSimplex (addSimplex initializeStream (Simplex [1,2])) (
 persistenceTest :: TestTree
 persistenceTest = testCase "Testing persistence function."
   (assertEqual "Should return ..." ([1,1]) (persistence stream6 1))
+
+persistenceTest2 :: TestTree
+persistenceTest2 = testCase "Testing persistence function on filled tetrahedron."
+  (assertEqual "Should return ..." ([1,0,0,0]) (persistence stream5 1))
+
+persistenceTest3 :: TestTree
+persistenceTest3 = testCase "Testing persistence function on four vertices."
+  (assertEqual "Should return ..." ([4]) (persistence stream3 1))
