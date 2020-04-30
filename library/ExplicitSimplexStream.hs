@@ -2,7 +2,7 @@
 
 module ExplicitSimplexStream where
 
-import Data.List (sort, subsequences)
+import Data.List (sort, subsequences, delete)
 
 import Numeric.LinearAlgebra
 
@@ -101,7 +101,6 @@ getSubcomplexes :: Simplex a -> [Simplex a]
 getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
 
 
-
 -- addSimplex adds a simplex and all sub-complexes to the stream if not already present.
 -- requirement: all names in simplex must be unique
 -- default filtration value 0.
@@ -109,6 +108,46 @@ addSimplex :: (Ord a) => Stream a -> Simplex a -> Stream a
 addSimplex (Simplices []) _ = error "Cannot add a simplex to a non-initialized stream."
 addSimplex (Simplices simps) simplex = 
     Simplices (foldl (\simplicesAccumulator spx -> if simplexInStream spx (Simplices simplicesAccumulator) then simplicesAccumulator else spx:simplicesAccumulator) simps (getSubcomplexes simplex))
+
+
+-- get value from simplex
+simplexLift :: Simplex a -> [a]
+simplexLift (Simplex x) = x 
+
+getSimplicesSizeN :: (Ord a) => Stream a -> Int -> [Simplex a]
+getSimplicesSizeN (Simplices []) _ = error "Cannot get simplices for uninitialized stream."
+getSimplicesSizeN (Simplices (x:xs)) n = 
+    if length (simplexLift x) == n then 
+        x:(getSimplicesSizeN (Simplices (xs)) n) 
+    else 
+        getSimplicesSizeN (Simplices (xs)) n
+
+isSimplexInSimplexList :: (Ord a) => Simplex a -> [Simplex a] -> Bool 
+isSimplexInSimplexList s [] = False 
+isSimplexInSimplexList s (x:xs) = if x == s then True else (isSimplexInSimplexList s xs) || False
+
+-- determines if a simplex is not a sub-simplex of any other simplices in the stream.
+-- algorithm: get vertices.
+-- iterate over vertices, adding them to simplex.
+-- compare with simplices of length simplex + 1.
+isMaxSimplex :: (Ord a) => Stream a -> Simplex a -> Bool
+isMaxSimplex stream (Simplex []) = False -- base case / trivial case. 
+isMaxSimplex stream (Simplex xs) = 
+    let 
+        len = length xs 
+        vertices = getSimplicesSizeN stream 1
+        nPlusOneSimplices = getSimplicesSizeN stream (len + 1)
+    in 
+        foldl (\acc x -> if isSimplexInSimplexList (Simplex (x:xs)) nPlusOneSimplices then False else acc) True (map vertexLift vertices)
+
+-- when subtracting, need to make sure that we maintain a valid simplicial complex. So in the inclusion maps, we can only remove from the top.
+subtractSimplex :: (Ord a) => Stream a -> Simplex a -> Stream a 
+subtractSimplex (Simplices []) _ = error "Cannot subtract from an uninitialized stream."
+subtractSimplex (Simplices (x:xs)) s = 
+    if isMaxSimplex (Simplices (x:xs)) s then
+        Simplices (delete s (x:xs))
+    else 
+        (Simplices (x:xs))
 
 
 -- get number of simplices in stream
