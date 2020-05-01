@@ -4,9 +4,6 @@ module ExplicitSimplexStream where
 
 import Data.List (sort, subsequences, delete)
 
-import Numeric.LinearAlgebra
-
-import Data.List.HT (mapAdjacent)
 
 -- Alternative approach:
 --      data Simplex = Simplex Int [Int]
@@ -149,7 +146,6 @@ subtractSimplex (Simplices (x:xs)) s =
     else 
         (Simplices (x:xs))
 
-
 -- get number of simplices in stream
 getSize :: Stream a -> Int
 getSize (Simplices []) = error "Cannot get size of a non-initialized stream."
@@ -179,27 +175,6 @@ getVertices (Simplices l) =
         else 
             acc
     ) [] l
-
-
-data BettiVector = BettiVector [Int]
-
-instance Show BettiVector where
-    show (BettiVector []) = "()"
-    show (BettiVector vs) = "(" ++ (foldl (\acc x -> acc ++ (show x)) "" vs) ++ ")"
-
--- persistence
--- Algorithm: 
--- Given a simplex stream, and a field coefficient p corresponding to Z/pZ we will return betti numbers (b_0, b_1, ..., b_n) where n+1 equals the degree of the highest order simplex in the stream. 
--- (1) Get simplex lists ordered by the degree of simplices
--- (2) Get boundary maps D_0, ..., D_{n-1} such that:
--- 0 <-- C_0 <-- C_1 <-- ... <-- C_{n-1} <-- C_n <-- 0
---  D_{-1}   D_0     D_1                D_{n-1}
--- (3) Compute dimensions of the Homologies:
--- dim H_0 = dim Ker 0 - dim Im D_0
--- dim H_1 = dim Ker D_0 - dim Im D_1 
--- ...
--- dim H_n = dim Ker D_{n-1} - dim Im 0
--- (4) return betti profile (dim H_0, dim H_1, ..., dim H_n)
 
 -- TODO: define show, equality, and ordering.
 data SimplexListByDegree a = SimplexListByDegree Int [Simplex a] deriving (Show)
@@ -232,8 +207,6 @@ streamToOrderedSimplexList :: (Ord a) => Stream a -> OrderedSimplexList a
 streamToOrderedSimplexList (Simplices []) = error "Cannot convert non-initialized stream to ordered simplex list."
 streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (addSimplexToOrderedSimplexList) [] xs))
 
-
-
 removeSimplexElement :: Simplex a -> Int -> [a]
 removeSimplexElement (Simplex []) _ = []
 removeSimplexElement (Simplex (x:xs)) n = if n == 0 then xs else x:(removeSimplexElement (Simplex xs) (n-1))
@@ -244,64 +217,3 @@ indexOfSimplex :: (Ord a) => Simplex a -> Int -> SimplexListByDegree a -> Int
 indexOfSimplex simp k (SimplexListByDegree n []) = error "Improper SimplexListByDegree in indexOfSimplex"
 indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = if x == simp then k else indexOfSimplex simp (k+1) (SimplexListByDegree n xs)
 
--- first int should be the lnegth of the x in (x:xs)
--- second int should be zero
--- matrix should be zero matrix
-getBoundaryMapHelper :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Double -> Matrix Double
-getBoundaryMapHelper list1 (SimplexListByDegree n []) _ _ mat = mat
-getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
-getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat = 
-    let 
-        x_dim = indexOfSimplex (Simplex (removeSimplexElement x (m-1))) 0 list1
-        y_dim = k
-        val = (-1)^(m-1)
-        updatedMatrix = accum mat (\a b -> a) [((x_dim,y_dim), val)]
-    in 
-        getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) (m-1) k updatedMatrix
-
--- First argument C_k
--- Second argument C_k+1
--- matrix dimensions: len(C_k) = num rows, len(C_k+1) = num cols
--- algorithm: 
--- Given element of C_k+1, y, remove i'th element from y (starting with index zero) to get element in C_k called x. 
--- Then the value in the matrix at row idxOf(x) and column idxOf(y) is (-1)^i.
-getBoundaryMap :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Matrix Double
-getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (matrix (length simps2) (replicate ((length simps1)*(length simps2)) 0))
-
-
--- first arg is D_i+1
--- second arg is D_i 
--- third argument k (or i in the below illustration)
--- want to find: dim ker D_i - dim im D_i+1
--- algorithm to find ker and im:
--- (i) rref matrix 
--- (ii) # of non-zero rows correspond to rnk of original matrix.
--- (iii) # of columns with leading 1’s correspond to the columns of original matrix that span image.
--- (iv) dim ker = (ii) - (iii)
-getHomologyDimension :: Matrix Double -> Matrix Double -> Int -> Int 
-getHomologyDimension m1 m2 k = 
-    let 
-        m1_columns = cols m1 
-        m2_columns = cols m2 
-        m1_rank = rank m1 
-        m2_rank = rank m2 
-        m1_nullity = m1_columns - m1_rank 
-        m2_nullity = m2_columns - m2_rank
-    in 
-        if k > 0 then 
-            m2_nullity - m1_rank 
-        else 
-            m2_columns - m1_rank
-
--- second argument is k
-persistenceHelper :: [Matrix Double] -> Int -> [Int]
-persistenceHelper [] k  = []
-persistenceHelper [x] k  = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case last boundary map
-persistenceHelper (x:y:xs) k = (getHomologyDimension y x k):(persistenceHelper (y:xs) (k+1))
-
-persistence :: (Ord a) => Stream a -> Int -> [Int]
-persistence stream field = 
-    let 
-        (OrderedSimplexList l) = streamToOrderedSimplexList stream 
-    in 
-        persistenceHelper (mapAdjacent getBoundaryMap l) 0

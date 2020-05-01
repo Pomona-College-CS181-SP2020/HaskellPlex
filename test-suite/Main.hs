@@ -8,6 +8,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import ExplicitSimplexStream
+import Persistence
 
 import Numeric.LinearAlgebra
 
