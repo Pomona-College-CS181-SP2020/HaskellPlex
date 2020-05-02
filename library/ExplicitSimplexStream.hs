@@ -36,6 +36,25 @@ instance (Ord a) => Eq (Simplex a) where
             (x:rest_x) = sort xs
             (y:rest_y) = sort ys
 
+-- Given a simplex return a list of all subcomplexes.
+-- note: this includes the trivial subcomplexes [] and the inputted simplex
+getSubcomplexes :: Simplex a -> [Simplex a]
+getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
+
+-- get list of points from simplex
+simplexLift :: Simplex a -> [a]
+simplexLift (Simplex x) = x 
+
+-- given a simplex, determine if it is a vertex
+isVertex :: Simplex a  -> Bool
+isVertex (Simplex [_x]) = True 
+isVertex _              = False
+
+-- get value from vertex (i.e. 1 cell)
+vertexLift :: Simplex a -> a
+vertexLift (Simplex [x]) = x 
+vertexLift _             = error "the vertexLift method only takes vertices as input."
+
 -- data type: Stream a
 -- A Stream is a non-trivial list of simplices.
 -- note: If the list is empty then the stream is non-initialized. If this is the case
@@ -46,12 +65,6 @@ data Stream a = Simplices [Simplex a]
 instance (Show a) => Show (Stream a) where
     show (Simplices []) = error "Cannot display a non-initialized Stream."
     show (Simplices xs) = intercalate ", " (map show xs)
-
--- TODO: implement more efficiently by looking at higher-order simplices
--- Two streams are equivalent if they contain identical simplices.
-instance (Ord a) => Eq (Stream a) where 
-    stream1 == stream2 = 
-        isSubcomplex stream1 stream2 && isSubcomplex stream2 stream1
 
 -- simplexInStream
 -- Iterates over the stream and checks for equality with the given simplex.
@@ -77,6 +90,13 @@ isSubcomplex (Simplices (x:xs)) stream2 =
     else 
         isSubcomplex (Simplices xs) stream2
 
+-- Equality instance for Stream a
+-- Two streams are equivalent if they contain identical simplices.
+-- Algorithm: Two simplicial complexes are equal if both are sub complexes of the other.
+    -- i.e. For Streams X and Y. X == Y iff for all x in X, x in Y AND for all y in Y, y in X.
+-- note: could implement more efficiently by looking only at highest-order simplices
+instance (Ord a) => Eq (Stream a) where
+    stream1 == stream2 = isSubcomplex stream1 stream2 && isSubcomplex stream2 stream1
 
 
 initializeStream :: Stream a 
@@ -96,12 +116,6 @@ isVertexInStream (Simplices (x:xs)) v =
         Simplex _   -> isVertexInStream (Simplices xs) v
 
 
--- Given a simplex return a list of all subcomplexes.
--- note: this includes the trivial subcomplexes [] and the inputted simplex
-getSubcomplexes :: Simplex a -> [Simplex a]
-getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
-
-
 -- addSimplex adds a simplex and all sub-complexes to the stream if not already present.
 -- requirement: all names in simplex must be unique
 -- default filtration value 0.
@@ -110,10 +124,6 @@ addSimplex (Simplices []) _ = error "Cannot add a simplex to a non-initialized s
 addSimplex (Simplices simps) simplex = 
     Simplices (foldl (\simplicesAccumulator spx -> if simplexInStream spx (Simplices simplicesAccumulator) then simplicesAccumulator else spx:simplicesAccumulator) simps (getSubcomplexes simplex))
 
-
--- get value from simplex
-simplexLift :: Simplex a -> [a]
-simplexLift (Simplex x) = x 
 
 getSimplicesSizeN :: (Ord a) => Stream a -> Int -> [Simplex a]
 getSimplicesSizeN (Simplices []) _ = error "Cannot get simplices for uninitialized stream."
@@ -155,20 +165,11 @@ getSize :: Stream a -> Int
 getSize (Simplices []) = error "Cannot get size of a non-initialized stream."
 getSize (Simplices l) = length l
 
--- given a simplex, determine if it is a vertex
-isVertex :: Simplex a  -> Bool
-isVertex (Simplex [_x]) = True 
-isVertex _          = False
 
 -- get the number of vertices
 numVertices :: Stream a -> Int 
 numVertices (Simplices [])    = error "Cannot get the number of vertices for a non-initialized stream."
 numVertices (Simplices simps) = foldl (\acc x -> if (isVertex x) then acc + 1 else acc) 0 simps
-
--- get value from vertex
-vertexLift :: Simplex a -> a
-vertexLift (Simplex [x]) = x 
-vertexLift _             = error "the vertexLift method only takes vertices as input."
 
 -- get verticies 
 getVertices :: Stream a -> [a]
