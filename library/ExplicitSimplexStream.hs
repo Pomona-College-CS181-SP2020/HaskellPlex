@@ -2,25 +2,29 @@
 
 module ExplicitSimplexStream where
 
-import Data.List (sort, subsequences, delete)
+import Data.List (sort, subsequences, delete, intercalate)
 
-
+-- data type: Simplex [a]
+-- A simplex is given by a list of n points representing a geometrical construction of dimension n-1.
+-- e.g. Simplex [1,2,3] or Simplex ["cat", "dog", "cow"]
+-- 
 -- Alternative approach:
---      data Simplex = Simplex Int [Int]
--- where the first term is the length(order) of the simplex.
--- advantages: this allows for much faster lookup. i.e. when iterating over a list of simplex we would not have to compute lengths.
--- disadvantages: more complexity for storage.
---
--- Another note: We should be able to implement with for a generic type a, as long as we can define equality and ordering on a.
---
+-- data Simplex = Simplex Int [a]
+-- where the first term is the length (order) of the simplex.
+---- advantages: this allows for much faster lookup. i.e. when iterating over a list of simplex we would not have to compute lengths.
+---- disadvantages: more complexity for storage.
 data Simplex a = Simplex [a]
 
 instance (Show a) => Show (Simplex a) where 
     show (Simplex xs) = show xs
 
--- Sort simplex lists, then iterate over both simultaneously comparing elements.
--- note: requires that elements have an ordering.
--- O(n log(n) + m log (m) + n + m)
+-- Equality instance for Simplex a
+-- Algorithm:
+-- (1) Sort simplex lists.
+-- (2) Iterate over both lists simultaneously comparing elements.
+-- note: we want Simplex [1,2,3] to equal Simplex [2,1,3]
+-- note: requires that elements are order-able.
+-- complexity: O(n log(n) + m log (m))
 instance (Ord a) => Eq (Simplex a) where
     (Simplex []) == (Simplex []) = True
     (Simplex []) == (Simplex _ys) = False 
@@ -32,18 +36,22 @@ instance (Ord a) => Eq (Simplex a) where
             (x:rest_x) = sort xs
             (y:rest_y) = sort ys
 
-
--- A stream is a list of simplices.
--- If the list is empty then the stream is non-initialized. If this is the case
--- then any operations on the stream will throw an error.
---
--- A simplicial complex is a non-empty set of finite sets closed under subsets.
+-- data type: Stream a
+-- A Stream is a non-trivial list of simplices.
+-- note: If the list is empty then the stream is non-initialized. If this is the case
+-- then any operations on the stream throw an error.
+-- note: An equivalent concept is the simplicial complex. A simplicial complex is a non-empty set of finite sets closed under subsets. We require that these simplex streams satisfy this same property.
 data Stream a = Simplices [Simplex a]
 
 instance (Show a) => Show (Stream a) where
-    show (Simplices []) = ""
-    show (Simplices (x:xs)) = show x ++ ", " ++ show (Simplices xs)
+    show (Simplices []) = error "Cannot display a non-initialized Stream."
+    show (Simplices xs) = intercalate ", " (map show xs)
 
+-- TODO: implement more efficiently by looking at higher-order simplices
+-- Two streams are equivalent if they contain identical simplices.
+instance (Ord a) => Eq (Stream a) where 
+    stream1 == stream2 = 
+        isSubcomplex stream1 stream2 && isSubcomplex stream2 stream1
 
 -- simplexInStream
 -- Iterates over the stream and checks for equality with the given simplex.
@@ -69,11 +77,7 @@ isSubcomplex (Simplices (x:xs)) stream2 =
     else 
         isSubcomplex (Simplices xs) stream2
 
--- TODO: implement more efficiently by looking at higher-order simplices
--- Two streams are equivalent if they contain identical simplices.
-instance (Ord a) => Eq (Stream a) where 
-    stream1 == stream2 = 
-        isSubcomplex stream1 stream2 && isSubcomplex stream2 stream1
+
 
 initializeStream :: Stream a 
 initializeStream = Simplices [(Simplex [])] -- initialize with null cell
