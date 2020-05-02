@@ -2,7 +2,6 @@
 
 module Persistence where 
 
-import Data.List (sort)
 import Numeric.LinearAlgebra
 import Data.List.HT (mapAdjacent)
 import ExplicitSimplexStream
@@ -28,20 +27,18 @@ instance Show BettiVector where
 -- dim H_n = dim Ker D_{n-1} - dim Im 0
 -- (4) return betti profile (dim H_0, dim H_1, ..., dim H_n)
 
-
-
--- first int should be the lnegth of the x in (x:xs)
+-- first int should initially be the length of the x in (x:xs)
 -- second int should be zero
 -- matrix should be zero matrix
 getBoundaryMapHelper :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Double -> Matrix Double
-getBoundaryMapHelper list1 (SimplexListByDegree n []) _ _ mat = mat
-getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
+getBoundaryMapHelper _     (SimplexListByDegree _ [])     _ _ mat = mat
+getBoundaryMapHelper list1 (SimplexListByDegree n (_:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat = 
     let 
         x_dim = indexOfSimplex (Simplex (removeSimplexElement x (m-1))) 0 list1
         y_dim = k
         val = (-1)^(m-1)
-        updatedMatrix = accum mat (\a b -> a) [((x_dim,y_dim), val)]
+        updatedMatrix = accum mat (\a _ -> a) [((x_dim,y_dim), val)] -- use accumulator to change values of matrix
     in 
         getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) (m-1) k updatedMatrix
 
@@ -52,7 +49,7 @@ getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat =
 -- Given element of C_k+1, y, remove i'th element from y (starting with index zero) to get element in C_k called x. 
 -- Then the value in the matrix at row idxOf(x) and column idxOf(y) is (-1)^i.
 getBoundaryMap :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Matrix Double
-getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (matrix (length simps2) (replicate ((length simps1)*(length simps2)) 0))
+getBoundaryMap list1@(SimplexListByDegree _ simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (matrix (length simps2) (replicate ((length simps1)*(length simps2)) 0))
 
 
 -- first arg is D_i+1
@@ -67,11 +64,9 @@ getBoundaryMap list1@(SimplexListByDegree m simps1) (SimplexListByDegree n simps
 getHomologyDimension :: Matrix Double -> Matrix Double -> Int -> Int 
 getHomologyDimension m1 m2 k = 
     let 
-        m1_columns = cols m1 
-        m2_columns = cols m2 
         m1_rank = rank m1 
+        m2_columns = cols m2 
         m2_rank = rank m2 
-        m1_nullity = m1_columns - m1_rank 
         m2_nullity = m2_columns - m2_rank
     in 
         if k > 0 then 
@@ -81,8 +76,8 @@ getHomologyDimension m1 m2 k =
 
 -- second argument is k
 persistenceHelper :: [Matrix Double] -> Int -> [Int]
-persistenceHelper [] k  = []
-persistenceHelper [x] k  = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case last boundary map
+persistenceHelper []       _ = []
+persistenceHelper [x]      k = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case last boundary map
 persistenceHelper (x:y:xs) k = (getHomologyDimension y x k):(persistenceHelper (y:xs) (k+1))
 
 persistence :: (Ord a) => Stream a -> Int -> [Int]

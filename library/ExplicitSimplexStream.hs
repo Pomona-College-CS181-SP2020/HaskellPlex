@@ -27,11 +27,11 @@ instance (Show a) => Show (Simplex a) where
 -- complexity: O(n log(n) + m log (m))
 instance (Ord a) => Eq (Simplex a) where
     (Simplex []) == (Simplex []) = True
-    (Simplex []) == (Simplex _ys) = False 
-    (Simplex _xs) == (Simplex []) = False
+    (Simplex []) == (Simplex _)  = False 
+    (Simplex _)  == (Simplex []) = False
     (Simplex xs) == (Simplex ys)
-            | x /= y = False 
-            | x == y = (Simplex rest_x) == (Simplex rest_y)
+            | x /= y    = False 
+            | otherwise = (Simplex rest_x) == (Simplex rest_y)
         where 
             (x:rest_x) = sort xs
             (y:rest_y) = sort ys
@@ -41,19 +41,32 @@ instance (Ord a) => Eq (Simplex a) where
 getSubcomplexes :: Simplex a -> [Simplex a]
 getSubcomplexes (Simplex s) = map (\x -> (Simplex x)) (subsequences s)
 
--- get list of points from simplex
-simplexLift :: Simplex a -> [a]
-simplexLift (Simplex x) = x 
-
 -- given a simplex, determine if it is a vertex
 isVertex :: Simplex a  -> Bool
 isVertex (Simplex [_x]) = True 
 isVertex _              = False
 
+-- get list of points from simplex
+simplexLift :: Simplex a -> [a]
+simplexLift (Simplex x) = x 
+
 -- get value from vertex (i.e. 1 cell)
 vertexLift :: Simplex a -> a
 vertexLift (Simplex [x]) = x 
 vertexLift _             = error "the vertexLift method only takes vertices as input."
+
+-- removeSimplexElement
+-- arguments:
+---- simplex
+---- index n
+-- returns a list of points minus the point at index n (maintains original order).
+removeSimplexElement :: Simplex a -> Int -> [a]
+removeSimplexElement (Simplex [])     _ = []
+removeSimplexElement (Simplex (x:xs)) n = 
+    if n == 0 then 
+        xs 
+    else
+        x:(removeSimplexElement (Simplex xs) (n-1))
 
 -- data type: Stream a
 -- A Stream is a non-trivial list of simplices.
@@ -115,7 +128,6 @@ isVertexInStream (Simplices (x:xs)) v =
         Simplex [z] -> if z == v then True else isVertexInStream (Simplices xs) v
         Simplex _   -> isVertexInStream (Simplices xs) v
 
-
 -- addSimplex adds a simplex and all sub-complexes to the stream if not already present.
 -- requirement: all names in simplex must be unique
 -- default filtration value 0.
@@ -123,7 +135,6 @@ addSimplex :: (Ord a) => Stream a -> Simplex a -> Stream a
 addSimplex (Simplices []) _ = error "Cannot add a simplex to a non-initialized stream."
 addSimplex (Simplices simps) simplex = 
     Simplices (foldl (\simplicesAccumulator spx -> if simplexInStream spx (Simplices simplicesAccumulator) then simplicesAccumulator else spx:simplicesAccumulator) simps (getSubcomplexes simplex))
-
 
 getSimplicesSizeN :: (Ord a) => Stream a -> Int -> [Simplex a]
 getSimplicesSizeN (Simplices []) _ = error "Cannot get simplices for uninitialized stream."
@@ -134,7 +145,7 @@ getSimplicesSizeN (Simplices (x:xs)) n =
         getSimplicesSizeN (Simplices (xs)) n
 
 isSimplexInSimplexList :: (Ord a) => Simplex a -> [Simplex a] -> Bool 
-isSimplexInSimplexList s [] = False 
+isSimplexInSimplexList _ [] = False 
 isSimplexInSimplexList s (x:xs) = if x == s then True else (isSimplexInSimplexList s xs) || False
 
 -- determines if a simplex is not a sub-simplex of any other simplices in the stream.
@@ -142,7 +153,7 @@ isSimplexInSimplexList s (x:xs) = if x == s then True else (isSimplexInSimplexLi
 -- iterate over vertices, adding them to simplex.
 -- compare with simplices of length simplex + 1.
 isMaxSimplex :: (Ord a) => Stream a -> Simplex a -> Bool
-isMaxSimplex stream (Simplex []) = False -- base case / trivial case. 
+isMaxSimplex _      (Simplex []) = False -- base case / trivial case. 
 isMaxSimplex stream (Simplex xs) = 
     let 
         len = length xs 
@@ -203,7 +214,7 @@ addSimplexToOrderedSimplexList :: Simplex a -> [SimplexListByDegree a] -> [Simpl
 addSimplexToOrderedSimplexList (Simplex simp) [] = [(SimplexListByDegree (length simp) [(Simplex simp)])]
 addSimplexToOrderedSimplexList (Simplex simp) (x:xs)
     | (length simp) /= (degreeOfSimplexListByDegree x) = x:(addSimplexToOrderedSimplexList (Simplex simp) xs)
-    | (length simp) == (degreeOfSimplexListByDegree x) = (addSimplexToSimplexListByDegree (Simplex simp) x):xs
+    | otherwise = (addSimplexToSimplexListByDegree (Simplex simp) x):xs
     
 -- streamToOrderedSimplex
 -- transforms a stream (e.g. [1,2,3,(1,2),(1,3)]) 
@@ -212,13 +223,15 @@ streamToOrderedSimplexList :: (Ord a) => Stream a -> OrderedSimplexList a
 streamToOrderedSimplexList (Simplices []) = error "Cannot convert non-initialized stream to ordered simplex list."
 streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (addSimplexToOrderedSimplexList) [] xs))
 
-removeSimplexElement :: Simplex a -> Int -> [a]
-removeSimplexElement (Simplex []) _ = []
-removeSimplexElement (Simplex (x:xs)) n = if n == 0 then xs else x:(removeSimplexElement (Simplex xs) (n-1))
+
 
 -- second argument should be zero.
 -- necessitates that simplex is in simplexlist
 indexOfSimplex :: (Ord a) => Simplex a -> Int -> SimplexListByDegree a -> Int 
-indexOfSimplex simp k (SimplexListByDegree n []) = error "Improper SimplexListByDegree in indexOfSimplex"
-indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = if x == simp then k else indexOfSimplex simp (k+1) (SimplexListByDegree n xs)
+indexOfSimplex _    _ (SimplexListByDegree _ [])     = error "Improper SimplexListByDegree in indexOfSimplex"
+indexOfSimplex simp k (SimplexListByDegree n (x:xs)) = 
+    if x == simp then 
+        k
+    else 
+        indexOfSimplex simp (k+1) (SimplexListByDegree n xs)
 
