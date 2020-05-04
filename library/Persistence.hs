@@ -35,7 +35,7 @@ getBoundaryMapHelper _     (SimplexListByDegree _ [])     _ _ mat = mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (_:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat = 
     let 
-        x_dim = indexOfSimplex (Simplex (removeSimplexElement x (m-1))) 0 list1
+        x_dim = indexOfSimplex (Simplex (removeSimplexElement x (m-1))) list1
         y_dim = k
         val = (-1)^(m-1)
         updatedMatrix = accum mat (\a _ -> a) [((x_dim,y_dim), val)] -- use accumulator to change values of matrix
