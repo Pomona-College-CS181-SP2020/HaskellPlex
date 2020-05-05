@@ -171,6 +171,7 @@ addSimplex (Simplices simps) simplex =
 -- return a list of simplices in the stream with size n.
 getSimplicesSizeN :: (Ord a) => Stream a -> Int -> [Simplex a]
 getSimplicesSizeN (Simplices [])     _ = error "Cannot get simplices for uninitialized stream."
+getSimplicesSizeN (Simplices [x])    n = if length (simplexLift x) == n then [x] else []
 getSimplicesSizeN (Simplices (x:xs)) n = 
     if length (simplexLift x) == n then 
         x:(getSimplicesSizeN (Simplices (xs)) n) 

@@ -2,6 +2,7 @@
 
 module Persistence where 
 
+import Data.List (intercalate)
 import Numeric.LinearAlgebra
 import Data.List.HT (mapAdjacent)
 import ExplicitSimplexStream
@@ -9,11 +10,11 @@ import ExplicitSimplexStream
 -- Betti Vector
 -- This data type is equivalent to a list of Ints. It represents the betti vector.
 -- For a betti vector of length n, all betti numbers b_i such that i >= n are assumed to be 0.
-data BettiVector = BettiVector [Int]
+data BettiVector = BettiVector [Int] deriving (Eq)
 
 instance Show BettiVector where
     show (BettiVector []) = "()"
-    show (BettiVector vs) = "(" ++ (foldl (\acc x -> acc ++ (show x)) "" vs) ++ ")"
+    show (BettiVector vs) = "(" ++ intercalate ", " (map show vs) ++ ")"
 
 
 -- first int should initially be the length of the x in (x:xs)
