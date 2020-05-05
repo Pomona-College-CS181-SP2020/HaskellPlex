@@ -6,26 +6,15 @@ import Numeric.LinearAlgebra
 import Data.List.HT (mapAdjacent)
 import ExplicitSimplexStream
 
-
+-- Betti Vector
+-- This data type is equivalent to a list of Ints. It represents the betti vector.
+-- For a betti vector of length n, all betti numbers b_i such that i >= n are assumed to be 0.
 data BettiVector = BettiVector [Int]
 
 instance Show BettiVector where
     show (BettiVector []) = "()"
     show (BettiVector vs) = "(" ++ (foldl (\acc x -> acc ++ (show x)) "" vs) ++ ")"
 
--- persistence
--- Algorithm: 
--- Given a simplex stream, and a field coefficient p corresponding to Z/pZ we will return betti numbers (b_0, b_1, ..., b_n) where n+1 equals the degree of the highest order simplex in the stream. 
--- (1) Get simplex lists ordered by the degree of simplices
--- (2) Get boundary maps D_0, ..., D_{n-1} such that:
--- 0 <-- C_0 <-- C_1 <-- ... <-- C_{n-1} <-- C_n <-- 0
---  D_{-1}   D_0     D_1                D_{n-1}
--- (3) Compute dimensions of the Homologies:
--- dim H_0 = dim Ker 0 - dim Im D_0
--- dim H_1 = dim Ker D_0 - dim Im D_1 
--- ...
--- dim H_n = dim Ker D_{n-1} - dim Im 0
--- (4) return betti profile (dim H_0, dim H_1, ..., dim H_n)
 
 -- first int should initially be the length of the x in (x:xs)
 -- second int should be zero
@@ -80,9 +69,23 @@ persistenceHelper []       _ = []
 persistenceHelper [x]      k = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case last boundary map
 persistenceHelper (x:y:xs) k = (getHomologyDimension y x k):(persistenceHelper (y:xs) (k+1))
 
-persistence :: (Ord a) => Stream a -> Int -> [Int]
+
+-- persistence
+-- The persistence algorithm computes the BettiVector for s simplex stream. The algorithm is as follows: 
+-- Given a simplex stream, and a field coefficient p corresponding to Z/pZ we will return betti numbers (b_0, b_1, ..., b_n) where n+1 equals the degree of the highest order simplex in the stream. 
+-- (1) Get simplex lists ordered by the degree of simplices
+-- (2) Get boundary maps D_0, ..., D_{n-1} such that:
+-- 0 <-- C_0 <-- C_1 <-- ... <-- C_{n-1} <-- C_n <-- 0
+--  D_{-1}   D_0     D_1                D_{n-1}
+-- (3) Compute dimensions of the Homologies:
+-- dim H_0 = dim Ker 0 - dim Im D_0
+-- dim H_1 = dim Ker D_0 - dim Im D_1 
+-- ...
+-- dim H_n = dim Ker D_{n-1} - dim Im 0
+-- (4) return betti profile (dim H_0, dim H_1, ..., dim H_n)
+persistence :: (Ord a) => Stream a -> Int -> BettiVector
 persistence stream field = 
     let 
         (OrderedSimplexList l) = streamToOrderedSimplexList stream 
     in 
-        persistenceHelper (mapAdjacent getBoundaryMap l) 0
+        BettiVector $ persistenceHelper (mapAdjacent getBoundaryMap l) 0
