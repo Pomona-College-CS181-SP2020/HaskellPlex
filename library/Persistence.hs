@@ -17,8 +17,8 @@ instance Show BettiVector where
 
 
 -- first int should initially be the length of the x in (x:xs)
--- second int should be zero
--- matrix should be zero matrix
+-- second int should initially be zero
+-- matrix argument should be the zero matrix
 getBoundaryMapHelper :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Double -> Matrix Double
 getBoundaryMapHelper _     (SimplexListByDegree _ [])     _ _ mat = mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (_:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
@@ -31,16 +31,21 @@ getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) m k mat =
     in 
         getBoundaryMapHelper list1 (SimplexListByDegree n (x:xs)) (m-1) k updatedMatrix
 
+-- getBoundaryMap
 -- First argument C_k
 -- Second argument C_k+1
--- matrix dimensions: len(C_k) = num rows, len(C_k+1) = num cols
+-- return matrix dimensions: len(C_k) = num rows, len(C_k+1) = num cols
 -- algorithm: 
 -- Given element of C_k+1, y, remove i'th element from y (starting with index zero) to get element in C_k called x. 
 -- Then the value in the matrix at row idxOf(x) and column idxOf(y) is (-1)^i.
 getBoundaryMap :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Matrix Double
-getBoundaryMap list1@(SimplexListByDegree _ simps1) (SimplexListByDegree n simps2) = getBoundaryMapHelper list1 (SimplexListByDegree n simps2) n 0 (matrix (length simps2) (replicate ((length simps1)*(length simps2)) 0))
+getBoundaryMap list1@(SimplexListByDegree _ simps1) list2@(SimplexListByDegree n simps2) = 
+    let 
+        zero_matrix = matrix (length simps2) (replicate ((length simps1)*(length simps2)) 0)
+    in
+        getBoundaryMapHelper list1 list2 n 0 zero_matrix
 
-
+-- getHomologyDimension
 -- first arg is D_i+1
 -- second arg is D_i 
 -- third argument k (or i in the below illustration)
@@ -66,9 +71,8 @@ getHomologyDimension m1 m2 k =
 -- second argument is k
 persistenceHelper :: [Matrix Double] -> Int -> [Int]
 persistenceHelper []       _ = []
-persistenceHelper [x]      k = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case last boundary map
+persistenceHelper [x]      k = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case for last boundary map
 persistenceHelper (x:y:xs) k = (getHomologyDimension y x k):(persistenceHelper (y:xs) (k+1))
-
 
 -- persistence
 -- The persistence algorithm computes the BettiVector for s simplex stream. The algorithm is as follows: 
