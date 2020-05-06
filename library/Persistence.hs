@@ -92,6 +92,7 @@ persistenceHelper (x:y:xs) k = (getHomologyDimension y x k):(persistenceHelper (
 -- ...
 -- dim H_n = dim Ker D_{n-1} - dim Im 0
 -- (4) return betti profile (dim H_0, dim H_1, ..., dim H_n)
+-- TODO: implement with rref mod p where Field = Z/pZ.
 persistence :: (Ord a) => Stream a -> Int -> BettiVector
 persistence stream field = 
     let 

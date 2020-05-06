@@ -304,4 +304,3 @@ instance (Ord a) => Ord (SimplexListByDegree a) where
 streamToOrderedSimplexList :: (Ord a) => Stream a -> OrderedSimplexList a
 streamToOrderedSimplexList (Simplices []) = error "Cannot convert non-initialized stream to ordered simplex list."
 streamToOrderedSimplexList (Simplices xs) = OrderedSimplexList (sort (foldr (addSimplexToListOfSimplexListByDegree) [] xs))
-
