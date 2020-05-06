@@ -16,10 +16,12 @@ instance Show BettiVector where
     show (BettiVector []) = "()"
     show (BettiVector vs) = "(" ++ intercalate ", " (map show vs) ++ ")"
 
-
--- first int should initially be the length of the x in (x:xs)
--- second int should initially be zero
--- matrix argument should be the zero matrix
+-- getBoundaryMapHelper (see: getBoundaryMap)
+-- First argument is SimplexListByDegree representing C_k
+-- Second argument is SimplexListByDegree representing C_k+1
+-- Third argument should initially be the length of the x in (x:xs) for C_k+1. It it a counter for removing elements from x.
+-- Fourth argument should initially be zero. It is a counter for the index of x in (x:xs).
+-- Fifth argument should be the zero matrix for _correct_ boundary map calculations.
 getBoundaryMapHelper :: (Ord a) => SimplexListByDegree a -> SimplexListByDegree a -> Int -> Int -> Matrix Double -> Matrix Double
 getBoundaryMapHelper _     (SimplexListByDegree _ [])     _ _ mat = mat
 getBoundaryMapHelper list1 (SimplexListByDegree n (_:xs)) 0 k mat = getBoundaryMapHelper list1 (SimplexListByDegree n (xs)) n (k+1) mat
@@ -69,7 +71,9 @@ getHomologyDimension m1 m2 k =
         else 
             m2_columns - m1_rank
 
--- second argument is k
+-- persistenceHelper (see: persistence)
+-- First argument is a list of matrices representing a sequence of boundary maps.
+-- Second argument is k representing the k'th homology.
 persistenceHelper :: [Matrix Double] -> Int -> [Int]
 persistenceHelper []       _ = []
 persistenceHelper [x]      k = [getHomologyDimension ((ident 1) - (ident 1)) x k] -- base case for last boundary map
